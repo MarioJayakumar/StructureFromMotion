@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 from numpy.lib.utils import source
+import matplotlib.pyplot as plt
+from Code.Utils import plot_images
 
 # source points is list of (x,y)
 # dest points is list of (x,y)
@@ -87,11 +89,10 @@ def computeFundamentalMatrix(source_points, dest_points, src_image=None, dst_ima
 
         lines2 = cv2.computeCorrespondEpilines(source_points.reshape(-1, 1, 2), 1, F_mat)
         lines2 = lines2.reshape(-1, 3)
-        _, new_dst = drawLines(dst_image, src_image, lines2, dest_points, source_points)
+        new_dst, _ = drawLines(dst_image, src_image, lines2, dest_points, source_points)
         r = np.random.randint(0, 100)
-        cv2.imshow("New Source" + str(r), new_src)
-        cv2.imshow("New Dest" + str(r), new_dst)
-        cv2.waitKey(0)
+        plot_images([new_src, new_dst], [])
+        #cv2.waitKey(0)
 
     F_U, F_S, F_V = np.linalg.svd(F_mat)
     F_S = np.diag(F_S)
@@ -132,7 +133,9 @@ def computeFundamentalMatrix_ref(source_points, dest_points, src_image=None, dst
         A.append(np.array([x1[i]*x2[i], x1[i]*y2[i], x1[i], y1[i]*x2[i], y1[i]*y2[i], y1[i], x2[i], y2[i], 1]))
     A = np.array(A).astype(np.float32)
     _, _, V = np.linalg.svd(A)
-    F = V[:, -1].reshape((3,3))
+    #F = V[:, -1].reshape((3,3))
+
+    F = computeFundamentalMatrix(source_points, dest_points)
 
     if src_image is not None:
         lines1 = cv2.computeCorrespondEpilines(dest_points.reshape(-1, 1, 2), 2, F)
@@ -142,8 +145,8 @@ def computeFundamentalMatrix_ref(source_points, dest_points, src_image=None, dst
         lines2 = cv2.computeCorrespondEpilines(source_points.reshape(-1, 1, 2), 1, F)
         lines2 = lines2.reshape(-1, 3)
         _, new_dst = drawLines(dst_image, src_image, lines2, dest_points, source_points)
-        cv2.imshow("New Source", new_src)
-        cv2.imshow("New Dest", new_dst)
+        plt.imshow(new_src)
+        plt.imshow(new_dst)
         cv2.waitKey(0)
 
     F_U, F_S, F_V = np.linalg.svd(F)
@@ -167,11 +170,12 @@ def drawLines(img1, img2, lines, pts1, pts2):
     img1 = img1.copy()
     img2 = img2.copy()
     r, c, _ = img1.shape
+    np.random.seed(10)
     for r, pt1, pt2 in zip(lines, pts1, pts2):
         color = tuple(np.random.randint(0, 255, 3).tolist())
         x0,y0 = map(int, [0, -r[2]/r[1]])
         x1,y1 = map(int, [c, -(r[2]+r[0]*c)/r[1]])
         img1 = cv2.line(img1, (x0,y0), (x1,y1), color, 1)
-        #img1 = cv2.circle(img1, tuple(pt1), 5, color, -1)
+        img1 = cv2.circle(img1, tuple([int(pt1[1]), int(pt1[0])]), 5, color, -1)
         #img2 = cv2.circle(img2, tuple(pt2), 5, color, -1)
     return img1, img2

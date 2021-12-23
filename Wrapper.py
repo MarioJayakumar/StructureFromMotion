@@ -13,7 +13,7 @@ from Code.BundleAdjustment import bundleAdjustment
 import numpy as np
 import matplotlib.pyplot as plt
 
-USE_RANSAC_CACHED =  False
+USE_RANSAC_CACHED =  True
 USE_NONLINEARTRIANGULATION_CACHE = True
 
 def compute_reprojection_error(correspondences, points_3d, C_set, R_set, K_mat):
